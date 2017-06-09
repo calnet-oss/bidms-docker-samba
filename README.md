@@ -88,7 +88,7 @@ Subsequent runs of `buildImage.sh` will not re-initialize the directory if
 the directory exists.
 
 If you plan on running the image on hosts separate from the machine you're
-running the 'buildImage.sh` script on then you'll probably want to let
+running the `buildImage.sh` script on then you'll probably want to let
 `buildImage.sh` initialize a directory and then copy the
 `HOST_SAMBA_DIRECTORY` to all the machines that you will be running the
 image on.  When copying, be careful about preserving file permissions.
