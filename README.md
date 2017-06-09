@@ -30,6 +30,11 @@ Update your Debian image:
 ./updateDebian.sh
 ```
 
+Make sure the `HOST_SAMBA_DIRECTORY` directory specified in `config.env`
+does not exist yet on your host machine (unless you're running buildImage.sh
+subsequent times and want to keep your existing directory) so that the build
+script will initialize your directory.
+
 Build the container image:
 ```
 ./buildImage.sh
@@ -44,7 +49,7 @@ To run the container interactively (which means you get a shell prompt):
 
 Or to run the container detached, in the background:
 ```
-detachedRunContainer.sh
+./detachedRunContainer.sh
 ```
 
 If everything goes smoothly, the container should expose port 636, the
@@ -53,14 +58,12 @@ Active Directory SSL port.
 You can then use your favorite directory client to connect to it.
 
 As an example, if you have the [OpenLDAP](http://www.openldap.org/)
-`ldapsearch` client installed: Run the `dumpAD.sh` script to dump the list
+`ldapsearch` client installed: Run the `./dumpAD.sh` script to dump the list
 of distinguished names in the directory.
 
-If running interatively, you can exit the container by exiting the bash
-shell.  If running in detached mode, you can stop the container with:
-```
-docker stop bidms-samba
-```
+If running interactively, you can exit the container by exiting the bash
+shell.  If running in detached mode, you can stop the container with: ```
+docker stop bidms-samba ```
 
 To inspect the running container from the host:
 ```
@@ -71,6 +74,24 @@ To list the running containers on the host:
 ```
 docker ps
 ```
+
+## Directory Persistence
+
+Docker will mount the host directory specified in `HOST_SAMBA_DIRECTORY`
+from config.env within the container as `/var/lib/samba` and this is how the
+directory is persisted across container runs.
+
+As mentioned in the build image step, the `buildImage.sh` script will
+initialize an empty directory as long as the `HOST_SAMBA_DIRECTORY`
+directory doesn't exist yet on the host at the time `buildImage.sh` is run. 
+Subsequent runs of `buildImage.sh` will not re-initialize the directory if
+the directory exists.
+
+If you plan on running the image on hosts separate from the machine you're
+running the 'buildImage.sh` script on then you'll probably want to let
+`buildImage.sh` initialize a directory and then copy the
+`HOST_SAMBA_DIRECTORY` to all the machines that you will be running the
+image on.  When copying, be careful about preserving file permissions.
 
 ## Kerberos
 
