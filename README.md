@@ -1,12 +1,16 @@
 ## Purpose
 
-This Docker image runs a Samba Active Directory Domain Controller and
+This [Docker](http://www.docker.com/) image runs a
+[Samba](http://www.samba.org/) Active Directory Domain Controller and
 exposes the TLS directory port on port 636.  This image is not used in
 production by the author but rather is used as an Active Directory server in
 development and early-testing environments.  With some hardening, it has
-potential for production deployments.  It can also be used as a Kerberos Key
-Distribution Center (KDC), although you'll have to EXPOSE more ports in the
-Dockerfile so that your Kerberos clients can connect to the KDC.
+potential for production deployments.  It can also be used as a
+[Kerberos](http://web.mit.edu/kerberos/) Key Distribution Center (KDC),
+although you'll have to
+[EXPOSE](https://docs.docker.com/engine/reference/builder/#expose) more
+ports in the [Dockerfile](https://docs.docker.com/engine/reference/builder/)
+so that your Kerberos clients can connect to the KDC.
 
 ## License
 
@@ -96,7 +100,7 @@ image on.  When copying, be careful about preserving file permissions.
 ## Kerberos
 
 This section is only relevant if you only want to interact directly with the
-Kerberos KDC that Samba provides.  (As a side note, you can use samba-tool
+Kerberos KDC that Samba provides.  (As a side note, you can use `samba-tool`
 to set passwords and such, so in most cases, interacting with Kerberos is
 not required.)
 
