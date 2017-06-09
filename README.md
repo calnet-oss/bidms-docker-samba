@@ -78,8 +78,8 @@ docker ps
 ## Directory Persistence
 
 Docker will mount the host directory specified in `HOST_SAMBA_DIRECTORY`
-from config.env within the container as `/var/lib/samba` and this is how the
-directory is persisted across container runs.
+from `config.env` within the container as `/var/lib/samba` and this is how
+the directory is persisted across container runs.
 
 As mentioned in the build image step, the `buildImage.sh` script will
 initialize an empty directory as long as the `HOST_SAMBA_DIRECTORY`
