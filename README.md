@@ -12,6 +12,10 @@ although you'll have to
 ports in the [Dockerfile](https://docs.docker.com/engine/reference/builder/)
 so that your Kerberos clients can connect to the KDC.
 
+The author does not currently publish the image in any public Docker
+repository but a script, described below, is provided to easily create your
+own image.
+
 ## License
 
 The source code, which in this project is primarily shell scripts and the
