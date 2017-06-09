@@ -61,7 +61,9 @@ Or to run the container detached, in the background:
 ```
 
 If everything goes smoothly, the container should expose port 636, the
-Active Directory SSL port.
+Active Directory SSL port.  This port is redirected to a port on the host,
+where the host port number is specified in `config.env` as
+`LOCAL_DIR_SSL_PORT`.
 
 You can then use your favorite directory client to connect to it.
 
