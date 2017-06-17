@@ -94,6 +94,13 @@ else
   exit 1
 fi
 
+if [ ! -z "$LOCAL_DIR_PORT" ]; then
+  echo "LOCAL_DIR_PORT=$LOCAL_DIR_PORT"
+else
+  echo "ERROR: Required LOCAL_DIR_PORT value missing from $CONFIG_FILE"
+  exit 1
+fi
+
 if [[ -z "$NO_HOST_SAMBA_DIRECTORY" && ! -z "$HOST_SAMBA_DIRECTORY" ]]; then
   echo "HOST_SAMBA_DIRECTORY=$HOST_SAMBA_DIRECTORY"
   MOUNTPARAMS="-v $HOST_SAMBA_DIRECTORY:/var/lib/samba"
@@ -117,6 +124,7 @@ docker run $INTERACTIVE_PARAMS --rm --name "bidms-samba" \
   $DNSSEARCHPARAMS \
   $MOUNTPARAMS \
   -p $LOCAL_DIR_SSL_PORT:636 \
+  -p $LOCAL_DIR_PORT:389 \
   $* \
   bidms/samba:latest \
   $ENTRYPOINT_ARGS && check_exit

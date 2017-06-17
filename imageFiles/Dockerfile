@@ -57,6 +57,7 @@ RUN set -x \
        --host-name="$AD_DC_HOSTNAME" \
        --option="log level=1" \
        --option="log file=/var/log/samba/samba.log" \
+       --option="ldap ssl ads=yes" \
   && samba-tool domain passwordsettings set --max-pwd-age=0
 
 COPY etc/krb5.conf /etc
@@ -85,6 +86,7 @@ RUN set -x \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+EXPOSE 389
 EXPOSE 636
 
 COPY etc/container/ /etc/container/
