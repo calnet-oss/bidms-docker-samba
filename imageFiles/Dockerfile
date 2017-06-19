@@ -66,7 +66,8 @@ RUN set -x \
   && AD_REALM_UPPER=$(echo "$AD_REALM"|tr '[:lower:]' '[:upper:]') \
   && AD_REALM_LOWER=$(echo "$AD_REALM"|tr '[:upper:]' '[:lower:]') \
   && sed -i "s/EXAMPLE.COM/${AD_REALM_UPPER}/" /etc/krb5.conf \
-  && sed -i "s/example.com/${AD_REALM_LOWER}/" /etc/krb5.conf
+  && sed -i "s/example.com/${AD_REALM_LOWER}/" /etc/krb5.conf \
+  && sed -i "s/\[global\]/\[global\]\n        ldap server require strong auth = No/" /etc/samba/smb.conf
 
 # Change the AD Administrator password in a way where the password doesn't
 # show up in plaintext in the output.
