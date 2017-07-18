@@ -35,7 +35,7 @@ RUN set -x \
   && apt-get dist-upgrade -y \
   && apt-get install -y inetutils-syslogd \
        bind9-host dnsutils krb5-user \
-       samba winbind expect \
+       samba winbind ldb-tools tdb-tools expect \
        man vim less \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* \
