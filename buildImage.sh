@@ -54,7 +54,9 @@ fi
 if [ ! -z "$AD_DC_HOSTNAME" ]; then
   ARGS+="--build-arg AD_DC_HOSTNAME=$AD_DC_HOSTNAME "
 fi
-
+if [ ! -z "$AD_BASE" ]; then
+  ARGS+="--build-arg AD_BASE=$AD_BASE "
+fi
 if [ ! -z "$APT_PROXY_URL" ]; then
   ARGS+="--build-arg APT_PROXY_URL=$APT_PROXY_URL "
 elif [ -e $HOME/.aptproxy ]; then

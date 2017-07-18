@@ -42,10 +42,13 @@ RUN set -x \
   && mv /etc/syslog.conf /etc/syslog.conf.ORIG
 COPY etc/syslog.conf /etc
 
+COPY root/ /root/
+
 # Samba AD Domain Controller set up
 ARG AD_REALM=example.com
 ARG AD_DOMAIN=example
 ARG AD_DC_HOSTNAME=dc1
+ARG AD_BASE=dc=example,dc=com
 COPY tmp_ad_passwords /tmp/tmp_ad_passwords/
 RUN set -x \
   && mv /etc/samba/smb.conf /etc/samba/smb.conf.ORIG \
@@ -62,6 +65,12 @@ RUN set -x \
        --option="log file=/var/log/samba/samba.log" \
        --option="ldap ssl ads=yes" \
   && samba-tool domain passwordsettings set --max-pwd-age=0
+
+# Add additional indexes
+RUN sed -i "s/AD_BASE/$AD_BASE/" /root/indexModifications.ldif \
+  && ldbmodify -H /var/lib/samba/private/sam.ldb \
+       /root/indexModifications.ldif \
+       --option="dsdb:schema update allowed"=true
 
 COPY etc/krb5.conf /etc
 

@@ -1,0 +1,4 @@
+dn: CN=Uid,CN=Schema,CN=Configuration,AD_BASE
+changetype: modify
+replace: searchFlags
+searchFlags: 9
