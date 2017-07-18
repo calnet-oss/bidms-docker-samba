@@ -67,6 +67,8 @@ RUN set -x \
   && samba-tool domain passwordsettings set --max-pwd-age=0
 
 # Add additional indexes
+# searchFlags, the index indicator attribute, is documented:
+# https://msdn.microsoft.com/en-us/library/ms679765(v=vs.85).aspx
 RUN sed -i "s/AD_BASE/$AD_BASE/" /root/indexModifications.ldif \
   && ldbmodify -H /var/lib/samba/private/sam.ldb \
        /root/indexModifications.ldif \
