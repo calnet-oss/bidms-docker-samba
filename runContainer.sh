@@ -55,7 +55,7 @@ else
 fi
 
 echo "Using config values from $CONFIG_FILE"
-. $CONFIG_FILE && check_exit
+. $CONFIG_FILE || check_exit
 
 EXISTINGNAMESERVERS=$(grep nameserver /etc/resolv.conf|awk '{print $2}')
 check_exit
@@ -127,7 +127,7 @@ docker run $INTERACTIVE_PARAMS --rm --name "bidms-samba" \
   -p $LOCAL_DIR_PORT:389 \
   $* \
   bidms/samba:latest \
-  $ENTRYPOINT_ARGS && check_exit
+  $ENTRYPOINT_ARGS || check_exit
 
 if [ ! -z "$NO_INTERACTIVE" ]; then
   echo "Running in detached mode.  Stop the container with 'docker stop bidms-samba'."
