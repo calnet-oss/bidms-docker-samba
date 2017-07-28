@@ -39,9 +39,9 @@ Update your Debian image:
 ```
 
 Make sure the `HOST_SAMBA_DIRECTORY` directory specified in `config.env`
-does not exist yet on your host machine (unless you're running buildImage.sh
-subsequent times and want to keep your existing directory) so that the build
-script will initialize your directory.
+does not exist yet on your host machine (unless you're running
+`buildImage.sh` subsequent times and want to keep your existing directory)
+so that the build script will initialize your directory.
 
 Build the container image:
 ```
