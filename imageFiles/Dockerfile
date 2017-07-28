@@ -24,7 +24,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
-FROM debian:stretch
+FROM bidms/debian_base
 
 ARG APT_PROXY_URL=
 RUN if [ ! -z "$APT_PROXY_URL" ]; then echo "Acquire::http::Proxy \"$APT_PROXY_URL\";" > /etc/apt/apt.conf.d/00aptproxy; else echo "not using apt proxy"; fi
@@ -33,14 +33,10 @@ RUN set -x \
   && export DEBIAN_FRONTEND=noninteractive \
   && apt-get update \
   && apt-get dist-upgrade -y \
-  && apt-get install -y inetutils-syslogd \
-       bind9-host dnsutils krb5-user \
+  && apt-get install -y bind9-host dnsutils krb5-user \
        samba winbind ldb-tools tdb-tools expect \
-       man vim less \
   && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* /tmp/* \
-  && mv /etc/syslog.conf /etc/syslog.conf.ORIG
-COPY etc/syslog.conf /etc
+  && rm -rf /var/lib/apt/lists/* /tmp/*
 
 COPY root/ /root/
 
