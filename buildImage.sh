@@ -82,8 +82,9 @@ if [ ! -z "$HOST_SAMBA_DIRECTORY" ]; then
   echo "Temporarily starting the container to copy /var/lib/samba to host"
   NO_INTERACTIVE="true" NO_HOST_SAMBA_DIRECTORY="true" ./runContainer.sh || check_exit
   TMP_SAMBA_HOST_DIR=$(./getSambaHostDir.sh)
-  if [ $? != 0 ]; then
+  if [[ $? != 0 || -z "$TMP_SAMBA_HOST_DIR" ]]; then
     echo "./getSambaHostDir.sh failed"
+    echo "Stopping the container."
     docker stop bidms-samba
     exit 1
   fi
@@ -91,7 +92,13 @@ if [ ! -z "$HOST_SAMBA_DIRECTORY" ]; then
   echo "Temporary host samba directory: $TMP_SAMBA_HOST_DIR"
   echo "$HOST_SAMBA_DIRECTORY does not yet exist.  Copying from temporary location."
   echo "You must have sudo access for this to work and you may be prompted for a sudo password."
-  sudo cp -pr $TMP_SAMBA_HOST_DIR $HOST_SAMBA_DIRECTORY || check_exit
+  sudo cp -pr $TMP_SAMBA_HOST_DIR $HOST_SAMBA_DIRECTORY
+  if [ $? != 0 ]; then
+    echo "copy from $TMP_SAMBA_HOST_DIR to $HOST_SAMBA_DIRECTORY failed"
+    echo "Stopping the container."
+    docker stop bidms-samba
+    exit 1
+  fi
   echo "Successfully copied to $HOST_SAMBA_DIRECTORY"
   
   echo "Stopping the container."
