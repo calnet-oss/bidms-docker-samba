@@ -57,6 +57,14 @@ fi
 echo "Using config values from $CONFIG_FILE"
 . $CONFIG_FILE || check_exit
 
+if [ ! -z "$NETWORK" ]; then
+  echo "NETWORK=$NETWORK"
+  NETWORKPARAMS+="--network $NETWORK "
+else
+  echo "ERROR: Required NETWORK value missing from $CONFIG_FILE"
+  exit 1
+fi
+
 EXISTINGNAMESERVERS=$(grep nameserver /etc/resolv.conf|awk '{print $2}')
 check_exit
 DNSPARAMS="--dns 127.0.0.1 "
