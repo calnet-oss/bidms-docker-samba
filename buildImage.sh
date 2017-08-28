@@ -48,9 +48,6 @@ fi
 if [ ! -z "$NETWORK" ]; then
   echo "NETWORK=$NETWORK"
   ARGS+="--network $NETWORK "
-else
-  echo "ERROR: Required NETWORK value missing from $CONFIG_FILE"
-  exit 1
 fi
 
 if [ ! -z "$AD_DOMAIN" ]; then
