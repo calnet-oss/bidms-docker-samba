@@ -33,7 +33,7 @@ RUN set -x \
   && export DEBIAN_FRONTEND=noninteractive \
   && apt-get update \
   && apt-get dist-upgrade -y \
-  && apt-get install -y bind9-host dnsutils krb5-user \
+  && apt-get install -y bind9-host dnsutils telnet krb5-user \
        samba winbind ldb-tools tdb-tools expect \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/*
