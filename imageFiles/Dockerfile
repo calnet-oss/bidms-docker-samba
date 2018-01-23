@@ -99,6 +99,7 @@ RUN set -x \
 
 # Copy the TLS key pair
 COPY tls/*.pem /var/lib/samba/private/tls/
+RUN chmod 600 /var/lib/samba/private/tls/key.pem
 
 EXPOSE 389
 EXPOSE 636
