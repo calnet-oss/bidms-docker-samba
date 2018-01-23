@@ -33,6 +33,9 @@ Make sure it's only readable by the owner:
 chmod 600 imageFiles/tmp_ad_passwords/ad_admin_pw
 ```
 
+Create your TLS certs in `imageFiles/tls`.  You need a ca.pem (CA public
+key), an unencrypted key.pem (private key) and a cert.pem (public key).
+
 Update your Debian image:
 ```
 ./updateDebian.sh

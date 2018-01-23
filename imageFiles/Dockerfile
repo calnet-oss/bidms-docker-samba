@@ -97,6 +97,9 @@ RUN set -x \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+# Copy the TLS key pair
+COPY tls/*.pem /var/lib/samba/private/tls/
+
 EXPOSE 389
 EXPOSE 636
 

@@ -1,2 +1,3 @@
 config.env
 imageFiles/tmp_ad_passwords/ad_admin_pw
+imageFiles/tls/*.pem
