@@ -34,7 +34,9 @@ chmod 600 imageFiles/tmp_ad_passwords/ad_admin_pw
 ```
 
 Create your TLS certs in `imageFiles/tls`.  You need a ca.pem (CA public
-key), an unencrypted key.pem (private key) and a cert.pem (public key).
+key), an unencrypted key.pem (private key) and a cert.pem (public key).  If
+you want to generate a self-signed certificate, you can use the
+[generateTLSCert.sh](generateTLSCert.sh) script.
 
 Update your Debian image:
 ```
