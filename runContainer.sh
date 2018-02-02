@@ -125,16 +125,36 @@ elif [ ! -z "$NO_INTERACTIVE" ]; then
   ENTRYPOINT_ARGS="detached"
 fi
 
-docker run $INTERACTIVE_PARAMS --rm --name "bidms-samba" \
+if [ ! -z "$RESTART_ALWAYS" ]; then
+  echo "Always restarting"
+  RESTARTPARAMS="--restart always"
+else
+  echo "Deleting container on exit"
+  RESTARTPARAMS="--rm"
+fi
+
+if [ ! -z "$USE_SUDO" ]; then
+  SUDO=sudo
+fi
+
+if [ -z "$DOCKER_REPOSITORY" ]; then
+  IMAGE="bidms/samba:latest"
+else
+  IMAGE="${DOCKER_REPOSITORY}/bidms/samba:latest"
+fi
+echo "IMAGE=$IMAGE"
+
+$SUDO docker run $INTERACTIVE_PARAMS --name "bidms-samba" \
   -h $AD_DC_HOSTNAME \
   --add-host "${AD_DC_HOSTNAME}.${AD_REALM} ${AD_DC_HOSTNAME}:${CONTAINER_IP4_ADDR}" \
   $DNSPARAMS \
   $DNSSEARCHPARAMS \
   $MOUNTPARAMS \
+  $RESTARTPARAMS \
   -p $LOCAL_DIR_SSL_PORT:636 \
   -p $LOCAL_DIR_PORT:389 \
   $* \
-  bidms/samba:latest \
+  $IMAGE \
   $ENTRYPOINT_ARGS || check_exit
 
 if [ ! -z "$NO_INTERACTIVE" ]; then
