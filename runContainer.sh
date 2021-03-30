@@ -154,6 +154,7 @@ $SUDO docker run $INTERACTIVE_PARAMS --name "bidms-samba" \
   $RESTARTPARAMS \
   -p $LOCAL_DIR_SSL_PORT:636 \
   -p $LOCAL_DIR_PORT:389 \
+  --cap-add SYS_ADMIN \
   $* \
   $IMAGE \
   $ENTRYPOINT_ARGS || check_exit

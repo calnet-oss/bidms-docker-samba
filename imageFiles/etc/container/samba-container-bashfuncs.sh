@@ -33,12 +33,12 @@ function container_startup {
     rm /var/lib/samba/cleanshutdown
   fi
   /usr/sbin/syslogd
-  /etc/init.d/samba start
+  /etc/init.d/samba-ad-dc start
 }
 
 function container_shutdown {
   touch /var/lib/samba/shuttingdown
-  /etc/init.d/samba stop
+  /etc/init.d/samba-ad-dc stop
   kill -TERM $(cat /var/run/syslog.pid)
   echo "Processes still running after shutdown:" > /var/lib/samba/cleanshutdown
   ps -uxaw >> /var/lib/samba/cleanshutdown

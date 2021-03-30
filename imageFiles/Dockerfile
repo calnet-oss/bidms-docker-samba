@@ -24,7 +24,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
-FROM bidms/debian_base
+FROM bidms/debian_base:bullseye
 
 ARG APT_PROXY_URL=
 RUN if [ ! -z "$APT_PROXY_URL" ]; then echo "Acquire::http::Proxy \"$APT_PROXY_URL\";" > /etc/apt/apt.conf.d/00aptproxy; else echo "not using apt proxy"; fi
@@ -34,7 +34,7 @@ RUN set -x \
   && apt-get update \
   && apt-get dist-upgrade -y \
   && apt-get install -y bind9-host dnsutils telnet krb5-user \
-       samba winbind ldb-tools tdb-tools expect \
+       samba winbind ldb-tools tdb-tools \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/*
 
@@ -45,30 +45,35 @@ ARG AD_REALM=example.com
 ARG AD_DOMAIN=example
 ARG AD_DC_HOSTNAME=dc1
 ARG AD_BASE=dc=example,dc=com
-COPY tmp_ad_passwords /tmp/tmp_ad_passwords/
 RUN set -x \
   && mv /etc/samba/smb.conf /etc/samba/smb.conf.ORIG \
-  && mv /etc/krb5.conf /etc/krb5.conf.ORIG \
-  && samba-tool domain provision \
+  && mv /etc/krb5.conf /etc/krb5.conf.ORIG
+
+ARG BACKEND_STORE_SIZE=4Gb
+RUN echo "#!/bin/sh" > /var/lib/samba/samba-domain-provision.sh \
+  && echo 'rm -f /etc/samba/smb.conf && \\' \
+  && echo "samba-tool domain provision \
+       --backend-store=mdb \
+       --backend-store-size=\"$BACKEND_STORE_SIZE\" \
        --use-rfc2307 \
-       --realm="$AD_REALM" \
-       --domain="$AD_DOMAIN" \
-       --server-role="dc" \
-       --dns-backend="SAMBA_INTERNAL" \
+       --realm=\"$AD_REALM\" \
+       --domain=\"$AD_DOMAIN\" \
+       --server-role=dc \
+       --dns-backend=\"SAMBA_INTERNAL\" \
        --adminpass=Passw0rd \
-       --host-name="$AD_DC_HOSTNAME" \
-       --option="log level=1" \
-       --option="log file=/var/log/samba/samba.log" \
-       --option="ldap ssl ads=yes" \
-  && samba-tool domain passwordsettings set --max-pwd-age=0
+       --host-name=\"$AD_DC_HOSTNAME\" \
+       --option=\"log level=1\" \
+       --option=\"log file=/var/log/samba/samba.log\" && \\" >> /var/lib/samba/samba-domain-provision.sh \
+  && echo 'samba-tool domain passwordsettings set --max-pwd-age=0 && \\' >> /var/lib/samba/samba-domain-provision.sh \
+  && chmod 755 /var/lib/samba/samba-domain-provision.sh
 
 # Add additional indexes
 # searchFlags, the index indicator attribute, is documented:
 # https://msdn.microsoft.com/en-us/library/ms679765(v=vs.85).aspx
 RUN sed -i "s/AD_BASE/$AD_BASE/" /root/indexModifications.ldif \
-  && ldbmodify -H /var/lib/samba/private/sam.ldb \
+  && echo 'ldbmodify -H /var/lib/samba/private/sam.ldb \
        /root/indexModifications.ldif \
-       --option="dsdb:schema update allowed"=true
+       --option="dsdb:schema update allowed"=true && \\' >> /var/lib/samba/samba-domain-provision.sh
 
 COPY etc/krb5.conf /etc
 
@@ -76,24 +81,15 @@ RUN set -x \
   && AD_REALM_UPPER=$(echo "$AD_REALM"|tr '[:lower:]' '[:upper:]') \
   && AD_REALM_LOWER=$(echo "$AD_REALM"|tr '[:upper:]' '[:lower:]') \
   && sed -i "s/EXAMPLE.COM/${AD_REALM_UPPER}/" /etc/krb5.conf \
-  && sed -i "s/example.com/${AD_REALM_LOWER}/" /etc/krb5.conf \
-  && sed -i "s/\[global\]/\[global\]\n        ldap server require strong auth = No/" /etc/samba/smb.conf
+  && sed -i "s/example.com/${AD_REALM_LOWER}/" /etc/krb5.conf
 
-# Change the AD Administrator password in a way where the password doesn't
-# show up in plaintext in the output.
+RUN echo 'sed -i "s/\[global\]/\[global\]\\n        ldap server require strong auth = No/" /etc/samba/smb.conf && \\' >> /var/lib/samba/samba-domain-provision.sh
+RUN echo 'mv /etc/samba/smb.conf /var/lib/samba && ln -fs /var/lib/samba /etc/samba/smb.conf' >> /var/lib/samba/samba-domain-provision.sh
+
+# smb.conf created later in /var/lib/samba by the samba-domain-provision.sh script
+RUN ln -fs /var/lib/samba/smb.conf /etc/samba/smb.conf
+
 RUN set -x \
-  && if [ -f /tmp/tmp_ad_passwords/ad_admin_pw ]; then \
-       echo "Using AD admin password from tmp_ad_passwords/ad_admin_pw"; \
-       AD_ADMIN_PW_FILE=/tmp/tmp_ad_passwords/ad_admin_pw; \
-     else \
-       echo "Using default insecure AD admin password from tmp_ad_passwords/ad_admin_pw.template"; \
-       AD_ADMIN_PW_FILE=/tmp/tmp_ad_passwords/ad_admin_pw.template; \
-     fi \
-  && sed -i "s#AD_ADMIN_PW_FILE#$AD_ADMIN_PW_FILE#" /tmp/tmp_ad_passwords/change_ad_password.expect \
-  && expect /tmp/tmp_ad_passwords/change_ad_password.expect \
-  && rm -rf /tmp/tmp_ad_passwords \
-  && apt-get -y purge expect \
-  && apt-get -y autoremove \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 

@@ -25,13 +25,12 @@ Dockerfile, is licensed under the [BSD two-clause license](LICENSE.txt).
 
 Copy `config.env.template` to `config.env` and edit to set config values.
 
-Create `imageFiles/tmp_ad_passwords/ad_admin_pw` file and set an Active
-Directory Administrator password.
+Create an `ad_admin_pw` file with the Active Directory Administrator
+password in it.
 
-Make sure it's only readable by the owner:
+Make it only readable by the owner:
 ```
-chmod 600 imageFiles/tmp_ad_passwords/ad_admin_pw
-```
+chmod 600 ad_admin_pw
 
 Create your TLS certs in `imageFiles/tls`.  You need a ca.pem (CA public
 key), an unencrypted key.pem (private key) and a cert.pem (public key).  If
@@ -52,6 +51,16 @@ Build the container image:
 ```
 ./buildImage.sh
 ```
+
+The domain Administrator password will be set to the password you have in
+the `ad_admin_pw` file unless you have set `SKIP_ADMIN_PASSWORD_CHANGE=1` in
+`config.env`.  If you have done that, then you should run the container and
+reset the password manually with `samba-tool user setpassword
+Administrator`.  Otherwise, you'll have the insecure, publicly-known default
+password.
+
+You'll need the `expect` program installed for `buildImage.sh` to be able to
+set the domain Administrator password.
 
 ## Running
 
@@ -120,9 +129,6 @@ EXAMPLE.COM if you configured with a different domain):
 ```
 kinit Administrator@EXAMPLE.COM
 ```
-
-The password is the one you provided in the
-`imageFiles/tmp_ad_passwords/ad_admin_pw` file.
 
 You can verify that it worked with:
 ```

@@ -62,6 +62,9 @@ fi
 if [ ! -z "$AD_BASE" ]; then
   ARGS+="--build-arg AD_BASE=$AD_BASE "
 fi
+if [ ! -z "$BACKEND_STORE_SIZE" ]; then
+  ARGS+="--build-arg BACKEND_STORE_SIZE=$BACKEND_STORE_SIZE "
+fi
 if [ ! -z "$APT_PROXY_URL" ]; then
   ARGS+="--build-arg APT_PROXY_URL=$APT_PROXY_URL "
 elif [ -e $HOME/.aptproxy ]; then
@@ -95,6 +98,42 @@ if [ ! -z "$HOST_SAMBA_DIRECTORY" ]; then
   fi
 
   echo "Temporary host samba directory: $TMP_SAMBA_HOST_DIR"
+
+  # Must be done during run rather than build phase due to a SYS_ADMIN cap requirement.
+  echo "Provisioning the Samba domain"
+  docker exec -i -t bidms-samba cat /var/lib/samba/samba-domain-provision.sh
+  docker exec -i -t bidms-samba /var/lib/samba/samba-domain-provision.sh
+  if [ $? != 0 ]; then
+    echo "samba-provision-domain.sh failed"
+    echo "Stopping the container."
+    docker stop bidms-samba
+    exit 1
+  fi
+
+  if [ -z "$SKIP_ADMIN_PASSWORD_CHANGE" ]; then
+    expect_installed=$(which expect)
+    if [ $? != 0 ]; then
+      echo "expect is not installed which is required to noninteractively change the domain Administrator password"
+      echo "Stopping the container."
+      docker stop bidms-samba
+      exit 1
+    fi
+    if [ ! -e "ad_admin_pw" ]; then
+      echo "ad_admin_pw file does not exist.  Cannot change the domain Administrator password without it."
+      echo "Stopping the container."
+      docker stop bidms-samba
+      exit 1
+    fi
+    echo "Changing the domain Administrator password."
+    expect change_ad_password.expect
+    if [ $? != 0 ]; then
+      echo "There was a failure setting the domain Administrator password."
+      echo "Stopping the container."
+      docker stop bidms-samba
+      exit 1
+    fi
+  fi
+
   echo "$HOST_SAMBA_DIRECTORY does not yet exist.  Copying from temporary location."
   echo "You must have sudo access for this to work and you may be prompted for a sudo password."
   sudo cp -pr $TMP_SAMBA_HOST_DIR $HOST_SAMBA_DIRECTORY

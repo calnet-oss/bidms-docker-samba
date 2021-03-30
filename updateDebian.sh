@@ -1,2 +1,2 @@
 #!/bin/sh
-docker pull debian:stretch
+docker pull debian:bullseye
