@@ -45,6 +45,15 @@ the argument defaults in the Dockerfile will be used.
 EOF
 fi
 
+if [ -z "$BUILDTIME_CMD" ]; then
+  # Can be overriden in config.env to be buildah instead.
+  BUILDTIME_CMD=docker
+fi
+if [ -z "$RUNTIME_CMD" ]; then
+  # Can be overriden in config.env to be podman instead.
+  RUNTIME_CMD=docker
+fi
+
 if [ ! -z "$NETWORK" ]; then
   echo "NETWORK=$NETWORK"
   ARGS+="--network $NETWORK "
@@ -72,8 +81,14 @@ elif [ -e $HOME/.aptproxy ]; then
   ARGS+="--build-arg APT_PROXY_URL=$apt_proxy_url "
 fi
 
+if [ ! -z "$(echo \"$BUILDTIME_CMD\" | grep buildah)" ]; then
+  build_cmd="$BUILDTIME_CMD build-using-dockerfile"
+else
+  build_cmd="$BUILDTIME_CMD build"
+fi
+
 echo "Using ARGS: $ARGS"
-docker build $ARGS -t bidms/samba:latest imageFiles || check_exit
+$build_cmd $ARGS -t bidms/samba:latest imageFiles || check_exit
 
 #
 # We want to temporarily start up the image so we can copy the contents of
@@ -93,7 +108,7 @@ if [ ! -z "$HOST_SAMBA_DIRECTORY" ]; then
   if [[ $? != 0 || -z "$TMP_SAMBA_HOST_DIR" ]]; then
     echo "./getSambaHostDir.sh failed"
     echo "Stopping the container."
-    docker stop bidms-samba
+    $RUNTIME_CMD stop bidms-samba
     exit 1
   fi
 
@@ -101,27 +116,28 @@ if [ ! -z "$HOST_SAMBA_DIRECTORY" ]; then
 
   # Must be done during run rather than build phase due to a SYS_ADMIN cap requirement.
   echo "Provisioning the Samba domain"
-  docker exec -i -t bidms-samba cat /var/lib/samba/samba-domain-provision.sh
-  docker exec -i -t bidms-samba /var/lib/samba/samba-domain-provision.sh
+  $RUNTIME_CMD exec -i -t bidms-samba cat /var/lib/samba/samba-domain-provision.sh
+  $RUNTIME_CMD exec -i -t bidms-samba /var/lib/samba/samba-domain-provision.sh
   if [ $? != 0 ]; then
     echo "samba-provision-domain.sh failed"
     echo "Stopping the container."
-    docker stop bidms-samba
+    $RUNTIME_CMD stop bidms-samba
     exit 1
   fi
 
   if [ -z "$SKIP_ADMIN_PASSWORD_CHANGE" ]; then
+    export RUNTIME_CMD
     expect_installed=$(which expect)
     if [ $? != 0 ]; then
       echo "expect is not installed which is required to noninteractively change the domain Administrator password"
       echo "Stopping the container."
-      docker stop bidms-samba
+      $RUNTIME_CMD stop bidms-samba
       exit 1
     fi
     if [ ! -e "ad_admin_pw" ]; then
       echo "ad_admin_pw file does not exist.  Cannot change the domain Administrator password without it."
       echo "Stopping the container."
-      docker stop bidms-samba
+      $RUNTIME_CMD stop bidms-samba
       exit 1
     fi
     echo "Changing the domain Administrator password."
@@ -129,7 +145,7 @@ if [ ! -z "$HOST_SAMBA_DIRECTORY" ]; then
     if [ $? != 0 ]; then
       echo "There was a failure setting the domain Administrator password."
       echo "Stopping the container."
-      docker stop bidms-samba
+      $RUNTIME_CMD stop bidms-samba
       exit 1
     fi
   fi
@@ -140,11 +156,11 @@ if [ ! -z "$HOST_SAMBA_DIRECTORY" ]; then
   if [ $? != 0 ]; then
     echo "copy from $TMP_SAMBA_HOST_DIR to $HOST_SAMBA_DIRECTORY failed"
     echo "Stopping the container."
-    docker stop bidms-samba
+    $RUNTIME_CMD stop bidms-samba
     exit 1
   fi
   echo "Successfully copied to $HOST_SAMBA_DIRECTORY"
   
   echo "Stopping the container."
-  docker stop bidms-samba || check_exit
+  $RUNTIME_CMD stop bidms-samba || check_exit
 fi

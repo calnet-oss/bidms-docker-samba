@@ -54,15 +54,17 @@ else
   exit 1
 fi
 
+if [ -z "$RUNTIME_CMD" ]; then
+  # Can be overriden in config.env to be podman instead.
+  RUNTIME_CMD=docker
+fi
+
 echo "Using config values from $CONFIG_FILE"
 . $CONFIG_FILE || check_exit
 
 if [ ! -z "$NETWORK" ]; then
   echo "NETWORK=$NETWORK"
   NETWORKPARAMS+="--network $NETWORK "
-else
-  echo "ERROR: Required NETWORK value missing from $CONFIG_FILE"
-  exit 1
 fi
 
 EXISTINGNAMESERVERS=$(grep nameserver /etc/resolv.conf|awk '{print $2}')
@@ -113,9 +115,9 @@ if [[ -z "$NO_HOST_SAMBA_DIRECTORY" && ! -z "$HOST_SAMBA_DIRECTORY" ]]; then
   echo "HOST_SAMBA_DIRECTORY=$HOST_SAMBA_DIRECTORY"
   MOUNTPARAMS="-v $HOST_SAMBA_DIRECTORY:/var/lib/samba"
 else
-  # Docker will choose where it wants to put it on the host.
+  # The container runtime will choose where it wants to put it on the host.
   # Use docker inspect bidms-samba to find out where.
-  echo "HOST_SAMBA_DIRECTORY not set.  Using docker default."
+  echo "HOST_SAMBA_DIRECTORY not set.  Using container default."
 fi
 
 if [[ -z "$NO_INTERACTIVE" && -z "$INTERACTIVE_PARAMS" ]]; then
@@ -144,7 +146,7 @@ else
 fi
 echo "IMAGE=$IMAGE"
 
-$SUDO docker run $INTERACTIVE_PARAMS --name "bidms-samba" \
+$SUDO $RUNTIME_CMD run $INTERACTIVE_PARAMS --name "bidms-samba" \
   -h $AD_DC_HOSTNAME \
   --add-host "${AD_DC_HOSTNAME}.${AD_REALM} ${AD_DC_HOSTNAME}:${CONTAINER_IP4_ADDR}" \
   $DNSPARAMS \
@@ -160,5 +162,5 @@ $SUDO docker run $INTERACTIVE_PARAMS --name "bidms-samba" \
   $ENTRYPOINT_ARGS || check_exit
 
 if [ ! -z "$NO_INTERACTIVE" ]; then
-  echo "Running in detached mode.  Stop the container with 'docker stop bidms-samba'."
+  echo "Running in detached mode.  Stop the container with '$RUNTIME_CMD stop bidms-samba'."
 fi

@@ -1,2 +1,9 @@
 #!/bin/sh
-docker pull debian:bullseye
+
+. ./config.env
+
+if [ -z "$BUILDTIME_CMD" ]; then
+  BUILDTIME_CMD=docker
+fi
+
+$BUILDTIME_CMD pull debian:bullseye

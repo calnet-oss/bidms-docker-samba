@@ -1,18 +1,17 @@
 ## Purpose
 
-This [Docker](http://www.docker.com/) image runs a
-[Samba](http://www.samba.org/) Active Directory Domain Controller and
-exposes the TLS directory port on port 636.  This image is not used in
-production by the author but rather is used as an Active Directory server in
-development and early-testing environments.  With some hardening, it has
-potential for production deployments.  It can also be used as a
-[Kerberos](http://web.mit.edu/kerberos/) Key Distribution Center (KDC),
-although you'll have to
+This container image runs a [Samba](http://www.samba.org/) Active Directory
+Domain Controller and exposes the TLS directory port on port 636.  This
+image is not used in production by the author but rather is used as an
+Active Directory server in development and early-testing environments.  With
+some hardening, it has potential for production deployments.  It can also be
+used as a [Kerberos](http://web.mit.edu/kerberos/) Key Distribution Center
+(KDC), although you'll have to
 [EXPOSE](https://docs.docker.com/engine/reference/builder/#expose) more
 ports in the [Dockerfile](https://docs.docker.com/engine/reference/builder/)
 so that your Kerberos clients can connect to the KDC.
 
-The author does not currently publish the image in any public Docker
+The author does not currently publish the image in any public container
 repository but a script, described below, is provided to easily create your
 own image.
 
@@ -21,7 +20,7 @@ own image.
 The source code, which in this project is primarily shell scripts and the
 Dockerfile, is licensed under the [BSD two-clause license](LICENSE.txt).
 
-## Building the Docker image
+## Building the container image
 
 Copy `config.env.template` to `config.env` and edit to set config values.
 
@@ -86,8 +85,11 @@ As an example, if you have the [OpenLDAP](http://www.openldap.org/)
 of distinguished names in the directory.
 
 If running interactively, you can exit the container by exiting the bash
-shell.  If running in detached mode, you can stop the container with: ```
-docker stop bidms-samba ```
+shell.  If running in detached mode, you can stop the container with: 
+```
+docker stop bidms-samba
+```
+(You may replace docker commands with podman if you prefer.)
 
 To inspect the running container from the host:
 ```
@@ -101,9 +103,10 @@ docker ps
 
 ## Directory Persistence
 
-Docker will mount the host directory specified in `HOST_SAMBA_DIRECTORY`
-from `config.env` within the container as `/var/lib/samba` and this is how
-the directory is persisted across container runs.
+The container runtime will mount the host directory specified in
+`HOST_SAMBA_DIRECTORY` from `config.env` within the container as
+`/var/lib/samba` and this is how the directory is persisted across container
+runs.
 
 As mentioned in the build image step, the `buildImage.sh` script will
 initialize an empty directory as long as the `HOST_SAMBA_DIRECTORY`
