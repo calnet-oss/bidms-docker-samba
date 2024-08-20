@@ -54,13 +54,13 @@ else
   exit 1
 fi
 
+echo "Using config values from $CONFIG_FILE"
+. $CONFIG_FILE || check_exit
+
 if [ -z "$RUNTIME_CMD" ]; then
   # Can be overriden in config.env to be podman instead.
   RUNTIME_CMD=docker
 fi
-
-echo "Using config values from $CONFIG_FILE"
-. $CONFIG_FILE || check_exit
 
 if [ ! -z "$NETWORK" ]; then
   echo "NETWORK=$NETWORK"
@@ -137,6 +137,10 @@ fi
 
 if [ ! -z "$USE_SUDO" ]; then
   SUDO=sudo
+  PRIVPARAMS="--privileged"
+else
+  echo "WARNING: Samba almost certainly will not run properly without running as a privileged container."
+  sleep 1
 fi
 
 if [ -z "$DOCKER_REPOSITORY" ]; then
@@ -146,7 +150,9 @@ else
 fi
 echo "IMAGE=$IMAGE"
 
+
 $SUDO $RUNTIME_CMD run $INTERACTIVE_PARAMS --name "bidms-samba" \
+  $PRIVPARAMS \
   -h $AD_DC_HOSTNAME \
   --add-host "${AD_DC_HOSTNAME}.${AD_REALM} ${AD_DC_HOSTNAME}:${CONTAINER_IP4_ADDR}" \
   $DNSPARAMS \
@@ -156,7 +162,6 @@ $SUDO $RUNTIME_CMD run $INTERACTIVE_PARAMS --name "bidms-samba" \
   $RESTARTPARAMS \
   -p $LOCAL_DIR_SSL_PORT:636 \
   -p $LOCAL_DIR_PORT:389 \
-  --cap-add SYS_ADMIN \
   $* \
   $IMAGE \
   $ENTRYPOINT_ARGS || check_exit

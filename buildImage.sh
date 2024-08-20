@@ -45,6 +45,11 @@ the argument defaults in the Dockerfile will be used.
 EOF
 fi
 
+if [ ! -z "$USE_SUDO" -a "$USER" != "root" ]; then
+  echo "USE_SUDO in effect: you must build this as root" >&2
+  exit 1
+fi
+
 if [ -z "$BUILDTIME_CMD" ]; then
   # Can be overriden in config.env to be buildah instead.
   BUILDTIME_CMD=docker
@@ -114,39 +119,41 @@ if [ ! -z "$HOST_SAMBA_DIRECTORY" ]; then
 
   echo "Temporary host samba directory: $TMP_SAMBA_HOST_DIR"
 
-  # Must be done during run rather than build phase due to a SYS_ADMIN cap requirement.
-  echo "Provisioning the Samba domain"
-  $RUNTIME_CMD exec -i -t bidms-samba cat /var/lib/samba/samba-domain-provision.sh
-  $RUNTIME_CMD exec -i -t bidms-samba /var/lib/samba/samba-domain-provision.sh
-  if [ $? != 0 ]; then
-    echo "samba-provision-domain.sh failed"
-    echo "Stopping the container."
-    $RUNTIME_CMD stop bidms-samba
-    exit 1
-  fi
+  if [ -z "$SKIP_PROVISION" ]; then
+    # Must be done during run rather than build phase due to a SYS_ADMIN cap requirement.
+    echo "Provisioning the Samba domain"
+    $RUNTIME_CMD exec -i -t bidms-samba cat /var/lib/samba/samba-domain-provision.sh
+    $RUNTIME_CMD exec -i -t bidms-samba /var/lib/samba/samba-domain-provision.sh
+    if [ $? != 0 ]; then
+      echo "samba-provision-domain.sh failed"
+      echo "Stopping the container."
+      $RUNTIME_CMD stop bidms-samba
+      exit 1
+    fi
 
-  if [ -z "$SKIP_ADMIN_PASSWORD_CHANGE" ]; then
-    export RUNTIME_CMD
-    expect_installed=$(which expect)
-    if [ $? != 0 ]; then
-      echo "expect is not installed which is required to noninteractively change the domain Administrator password"
-      echo "Stopping the container."
-      $RUNTIME_CMD stop bidms-samba
-      exit 1
-    fi
-    if [ ! -e "ad_admin_pw" ]; then
-      echo "ad_admin_pw file does not exist.  Cannot change the domain Administrator password without it."
-      echo "Stopping the container."
-      $RUNTIME_CMD stop bidms-samba
-      exit 1
-    fi
-    echo "Changing the domain Administrator password."
-    expect change_ad_password.expect
-    if [ $? != 0 ]; then
-      echo "There was a failure setting the domain Administrator password."
-      echo "Stopping the container."
-      $RUNTIME_CMD stop bidms-samba
-      exit 1
+    if [ -z "$SKIP_ADMIN_PASSWORD_CHANGE" ]; then
+      export RUNTIME_CMD
+      expect_installed=$(which expect)
+      if [ $? != 0 ]; then
+        echo "expect is not installed which is required to noninteractively change the domain Administrator password"
+        echo "Stopping the container."
+        $RUNTIME_CMD stop bidms-samba
+        exit 1
+      fi
+      if [ ! -e "ad_admin_pw" ]; then
+        echo "ad_admin_pw file does not exist.  Cannot change the domain Administrator password without it."
+        echo "Stopping the container."
+        $RUNTIME_CMD stop bidms-samba
+        exit 1
+      fi
+      echo "Changing the domain Administrator password."
+      expect change_ad_password.expect
+      if [ $? != 0 ]; then
+        echo "There was a failure setting the domain Administrator password."
+        echo "Stopping the container."
+        $RUNTIME_CMD stop bidms-samba
+        exit 1
+      fi
     fi
   fi
 
