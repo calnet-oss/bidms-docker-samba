@@ -113,11 +113,22 @@ fi
 
 if [[ -z "$NO_HOST_SAMBA_DIRECTORY" && ! -z "$HOST_SAMBA_DIRECTORY" ]]; then
   echo "HOST_SAMBA_DIRECTORY=$HOST_SAMBA_DIRECTORY"
-  MOUNTPARAMS="-v $HOST_SAMBA_DIRECTORY:/var/lib/samba"
+  MOUNTPARAMS+="-v $HOST_SAMBA_DIRECTORY:/var/lib/samba "
 else
   # The container runtime will choose where it wants to put it on the host.
   # Use docker inspect bidms-samba to find out where.
   echo "HOST_SAMBA_DIRECTORY not set.  Using container default."
+fi
+
+if [[ -z "$NO_HOST_SAMBA_LDB_DIRECTORY" && ! -z "$HOST_SAMBA_LDB_DIRECTORY" ]]; then
+  if [[ "$HOST_SAMBA_LDB_DIRECTORY" != "${HOST_SAMBA_DIRECTORY}/private/sam.ldb.d" ]]; then
+    echo "HOST_SAMBA_LDB_DIRECTORY=$HOST_SAMBA_LDB_DIRECTORY"
+    MOUNTPARAMS+="-v $HOST_SAMBA_LDB_DIRECTORY:/var/lib/samba/private/sam.ldb.d "
+  fi
+else
+  # The container runtime will choose where it wants to put it on the host.
+  # Use docker inspect bidms-samba to find out where.
+  echo "HOST_SAMBA_LDB_DIRECTORY not set.  Using container default."
 fi
 
 if [[ -z "$NO_INTERACTIVE" && -z "$INTERACTIVE_PARAMS" ]]; then

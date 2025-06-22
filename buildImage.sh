@@ -108,7 +108,7 @@ if [ ! -z "$HOST_SAMBA_DIRECTORY" ]; then
     exit
   fi
   echo "Temporarily starting the container to copy /var/lib/samba to host"
-  NO_INTERACTIVE="true" NO_HOST_SAMBA_DIRECTORY="true" ./runContainer.sh || check_exit
+  NO_INTERACTIVE="true" NO_HOST_SAMBA_DIRECTORY="true" NO_HOST_SAMBA_LDB_DIRECTORY="true" ./runContainer.sh || check_exit
   TMP_SAMBA_HOST_DIR=$(./getSambaHostDir.sh)
   if [[ $? != 0 || -z "$TMP_SAMBA_HOST_DIR" ]]; then
     echo "./getSambaHostDir.sh failed"
